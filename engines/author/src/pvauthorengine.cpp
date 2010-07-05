@@ -118,12 +118,12 @@ void PVAuthorEngine::Construct(PVCommandStatusObserver* aCmdStatusObserver,
     iPendingEvents.reserve(PVAE_NUM_PENDING_EVENTS);
 
     iNodeUtil.SetObserver(*this);
-
+#ifndef DREAMSAPPHIRE
     iAuthorClock.SetClockTimebase(iAuthorClockTimebase);
     uint32 starttime = 0;
     bool overflow = 0;
     iAuthorClock.SetStartTime32(starttime, PVMF_MEDIA_CLOCK_MSEC, overflow);
-
+#endif
     AddToScheduler();
     return;
 }
@@ -638,7 +638,9 @@ void PVAuthorEngine::NodeUtilCommandCompleted(const PVMFCmdResp& aResponse)
             else
             {
                 SetPVAEState(PVAE_STATE_INITIALIZED); // Init done. Change state
+#ifndef DREAMSAPPHIRE
                 SendAuthoringClockToDataSources();
+#endif
             }
             break;
 
@@ -676,7 +678,9 @@ void PVAuthorEngine::NodeUtilCommandCompleted(const PVMFCmdResp& aResponse)
             else
             {
                 SetPVAEState(PVAE_STATE_RECORDING); // Start done. Change state
+#ifndef DREAMSAPPHIRE
                 iAuthorClock.Start();
+#endif
             }
             break;
 
@@ -1401,9 +1405,11 @@ PVMFStatus PVAuthorEngine::DoReset(PVEngineCommand& aCmd)
             ResetNodeContainers();
             return PVMFSuccess;
         }
+#ifndef DREAMSAPPHIRE
         //Notify data sources to stop using author clock
         iAuthorClock.Stop();
         SendAuthoringClockToDataSources(true);
+#endif
         ResetGraph();
     }
     return PVMFPending;
@@ -1439,9 +1445,9 @@ PVMFStatus PVAuthorEngine::DoPause(PVEngineCommand& aCmd)
     {
         return PVMFErrInvalidState;
     }
-
+#ifndef DREAMSAPPHIRE
     iAuthorClock.Pause();
-
+#endif
     iNodeUtil.Pause(iDataSourceNodes);
     if (iEncoderNodes.size() > 0)
         iNodeUtil.Pause(iEncoderNodes);
@@ -2916,7 +2922,7 @@ PVAuthorEngineInterface::GetSDKInfo
     aSdkInfo.iLabel = PVAUTHOR_ENGINE_SDKINFO_LABEL;
     aSdkInfo.iDate  = PVAUTHOR_ENGINE_SDKINFO_DATE;
 }
-
+#ifndef DREAMSAPPHIRE
 PVMFStatus PVAuthorEngine::SendAuthoringClockToDataSources(bool aReset)
 {
     // Create the kvp for the Authoring clock
@@ -2967,5 +2973,5 @@ PVMFStatus PVAuthorEngine::SendAuthoringClockToDataSources(bool aReset)
     alloc.deallocate((OsclAny*)(kvp.key));
     return PVMFSuccess;
 }
-
+#endif
 

@@ -51,8 +51,10 @@
 #ifndef PVMF_SIMPLE_MEDIA_BUFFER_H_INCLUDED
 #include "pvmf_simple_media_buffer.h"
 #endif
+#ifndef DREAMSAPPHIRE
 #ifndef PVMF_MEDIA_CLOCK_H_INCLUDED
 #include "pvmf_media_clock.h"
+#endif
 #endif
 
 #ifdef HIDE_MIO_SYMBOLS
@@ -287,8 +289,12 @@ class AndroidCameraInput
     : public OsclTimerObject,
       public PvmiMIOControl,
       public PvmiMediaTransfer,
+#ifndef DREAMSAPPHIRE
       public PvmiCapabilityAndConfig,
       public PVMFMediaClockStateObserver
+#else
+      public PvmiCapabilityAndConfig
+#endif
 {
 public:
     AndroidCameraInput();
@@ -413,11 +419,11 @@ public:
     void setAudioLossDuration(uint32 duration);
 
     bool isRecorderStarting() { return iState==STATE_STARTED?true:false; }
-
+#ifndef DREAMSAPPHIRE
     /* From PVMFMediaClockStateObserver and its base */
     void ClockStateUpdated();
     void NotificationsInterfaceDestroyed();
-
+#endif
 private:
     // release all queued recording frames that have not been
     // given the chance to be sent out.
@@ -461,9 +467,9 @@ private:
      * @return PVMFSuccess if parameter is supported, else PVMFFailure
      */
     PVMFStatus VerifyAndSetParameter(PvmiKvp* aKvp, bool aSetParam=false);
-
+#ifndef DREAMSAPPHIRE
     void RemoveDestroyClockObs();
-
+#endif
     // Command queue
     uint32 iCmdIdCounter;
     Oscl_Vector<AndroidCameraInputCmd, OsclMemAllocator> iCmdQueue;
@@ -477,6 +483,9 @@ private:
     bool iThreadLoggedOn;
 
     int32 iDataEventCounter;
+#ifdef DREAMSAPPHIRE
+    int32 iStartTickCount;
+#endif
 
     // Timing
     int32 iMilliSecondsPerDataEvent;
@@ -527,11 +536,12 @@ private:
 
     enum WriteState {EWriteBusy, EWriteOK};
     WriteState iWriteState;
-
+#ifndef DREAMSAPPHIRE
     PVMFMediaClock *iAuthorClock;
     PVMFMediaClockNotificationsInterface *iClockNotificationsInf;
 
     uint32 iAudioFirstFrameTs;
+#endif
     OsclMutex iAudioLossMutex;
     uint32 iAudioLossDuration;
     PVRefBufferAlloc    mbufferAlloc;
