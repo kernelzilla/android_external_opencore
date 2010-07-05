@@ -1487,7 +1487,9 @@ PVMFStatus PVAuthorEngine::DoStop(PVEngineCommand& aCmd)
             return PVMFSuccess;
         case PVAE_STATE_RECORDING:
         case PVAE_STATE_PAUSED:
+#ifndef NO_PV_AUTHORING_CLOCK
             iAuthorClock.Stop();
+#endif
             iNodeUtil.Flush(iDataSourceNodes);
             if (iEncoderNodes.size() > 0)
                 iNodeUtil.Flush(iEncoderNodes);
