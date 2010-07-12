@@ -31,7 +31,14 @@ LOCAL_C_INCLUDES := $(PV_INCLUDES) \
 
 LOCAL_MODULE := libandroidpv
 
-LOCAL_SHARED_LIBRARIES := libui libutils libbinder libsurfaceflinger_client libcamera_client
+LOCAL_SHARED_LIBRARIES := libui libutils libbinder
+
+ifneq ($(BOARD_USES_ECLAIR_LIBCAMERA),true)
+    LOCAL_SHARED_LIBRARIES += \
+    	libsurfaceflinger_client \
+    	libcamera_client
+endif
+
 LOCAL_STATIC_LIBRARIES := libosclbase libosclerror libosclmemory libosclutil
 
 LOCAL_LDLIBS +=
