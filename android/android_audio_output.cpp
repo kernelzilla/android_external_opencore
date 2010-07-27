@@ -202,6 +202,7 @@ PVMFCommandId AndroidAudioOutput::DiscardData(PVMFTimestamp aTimestamp, const Os
    
     if(iActiveTiming){
         LOGV("Force clock update");
+        iActiveTiming->checkDelayedStart(false);
         iActiveTiming->ForceClockUpdate();
     }
 
