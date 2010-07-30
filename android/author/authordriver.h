@@ -134,6 +134,7 @@ enum author_command_type {
     AUTHOR_SET_PREVIEW_SURFACE,
     AUTHOR_SET_OUTPUT_FILE,
     AUTHOR_SET_PARAMETERS,
+    AUTHOR_SET_CAMERA_PARAMETERS,
     AUTHOR_PREPARE,
     AUTHOR_START,
     AUTHOR_STOP,
@@ -236,6 +237,23 @@ private:
     set_parameters_command& operator=(const set_parameters_command&);
 };
 
+struct set_camera_parameters_command : author_command
+{
+    set_camera_parameters_command(const String8& params)
+        : author_command(AUTHOR_SET_CAMERA_PARAMETERS),
+          mParams(params) {
+    }
+
+    const String8& params() const { return mParams; }
+
+private:
+    String8 mParams;
+
+    // Disallow copying and assignment.
+    set_camera_parameters_command(const set_camera_parameters_command&);
+    set_camera_parameters_command& operator=(const set_camera_parameters_command&);
+};
+
 class MediaProfiles;
 
 class AuthorDriver :
@@ -268,6 +286,7 @@ public:
     void handleSetPreviewSurface(set_preview_surface_command *ac);
     void handleSetOutputFile(set_output_file_command *ac);
     void handleSetParameters(set_parameters_command *ac);
+    void handleSetCameraParameters(set_camera_parameters_command *ac);
     void handlePrepare(author_command *ac);
     void handleStart(author_command *ac);
     void handleStop(author_command *ac);

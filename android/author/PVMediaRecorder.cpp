@@ -148,6 +148,19 @@ status_t PVMediaRecorder::setParameters(const String8& params) {
             command, NULL /* completion_func */, NULL /* completion_cookie */);
 }
 
+status_t PVMediaRecorder::setCameraParameters(const String8& params) {
+    LOGV("setCameraParameters(%s)", params.string());
+    set_camera_parameters_command *command = new set_camera_parameters_command(params);
+    if (command == NULL) {
+        LOGE("failed to construct an author command");
+
+        return NO_MEMORY;
+    }
+
+    return mAuthorDriverWrapper->enqueueCommand(
+            command, NULL /* completion_func */, NULL /* completion_cookie */);
+}
+
 status_t PVMediaRecorder::setAudioEncoder(audio_encoder ae)
 {
     LOGV("setAudioEncoder(%d)", ae);

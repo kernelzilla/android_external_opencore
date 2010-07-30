@@ -1145,6 +1145,26 @@ void AndroidCameraInput::SetPreviewSurface(const sp<android::ISurface>& surface)
     }
 }
 
+PVMFStatus AndroidCameraInput::SetCameraParameters(const String8& params)
+{
+    LOGV("SetCameraParameters");
+
+    if (mCamera != NULL) {
+        CameraParameters p(params);
+        //TODO: Extract the rotation information and re-initialize the
+        //graph if required.
+        String8 s = p.flatten();
+        if (mCamera->setParameters(s) != NO_ERROR) {
+            LOGE("Failed to set camera(%p) parameters", mCamera.get());
+            return PVMFFailure;
+        }
+        return PVMFSuccess;
+    }
+
+    LOGE("mCamera is NULL");
+    return PVMFFailure;
+}
+
 PVMFStatus AndroidCameraInput::SetCamera(const sp<android::ICamera>& camera)
 {
     LOGV("SetCamera");

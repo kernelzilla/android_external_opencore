@@ -266,6 +266,10 @@ void AuthorDriver::Run()
         handleSetParameters((set_parameters_command *)ac);
         return;
 
+    case AUTHOR_SET_CAMERA_PARAMETERS:
+        handleSetCameraParameters((set_camera_parameters_command *)ac);
+        return;
+
     case AUTHOR_REMOVE_VIDEO_SOURCE:
         handleRemoveVideoSource(ac);
         return;
@@ -936,6 +940,25 @@ void AuthorDriver::handlePrepare(author_command *ac)
     int error = 0;
     OSCL_TRY(error, mAuthor->Init(ac));
     OSCL_FIRST_CATCH_ANY(error, commandFailed(ac));
+}
+
+void AuthorDriver::handleSetCameraParameters(set_camera_parameters_command *ac)
+{
+    LOGV("handleSetCameraParameters");
+    PVMFStatus ret = PVMFSuccess;
+
+    String8 p(ac->params());
+
+    if(mVideoInputMIO){
+        ret = ((AndroidCameraInput *)mVideoInputMIO)->SetCameraParameters(p);
+    }
+
+    if(ret == PVMFSuccess) {
+        FinishNonAsyncCommand(ac);
+    } else {
+        LOGE("Ln %d handleSetCameraParameters error", __LINE__);
+        commandFailed(ac);
+    }
 }
 
 void AuthorDriver::handleStart(author_command *ac)
