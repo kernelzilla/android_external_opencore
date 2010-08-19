@@ -95,6 +95,8 @@ typedef enum
 #define ANDROID_VIDEO_FORMAT       PVMF_MIME_YUV420
 #endif
 
+#define VIDEO_PULL_DURATION_8x50            130
+
 //FIXME mime string now
 /*
 #if ANDROID_VIDEO_FORMAT == PVMF_MIME_YUV420
@@ -555,6 +557,8 @@ private:
         uint32 offset;
     } *pPmemInfo;
 
+    uint32 iVideoFrameSkipCnt;
+    uint32 iVideoDurationToPull;
 };
 
 #ifdef HIDE_MIO_SYMBOLS
