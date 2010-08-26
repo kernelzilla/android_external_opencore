@@ -1263,11 +1263,6 @@ PVMFStatus AndroidCameraInput::postWriteAsync(nsecs_t timestamp, const sp<IMemor
         mCamera->releaseRecordingFrame(frame);
         return PVMFSuccess;
     }
-#endif
-#ifdef NO_PV_AUTHORING_CLOCK
-    // calculate timestamp as offset from start time
-    uint32 t = (uint32)(timestamp / 1000000L) - iStartTickCount;
-#endif
 
     //Adjust the timestamp for the number of frames where the ts is less than
     //set value
@@ -1278,6 +1273,20 @@ PVMFStatus AndroidCameraInput::postWriteAsync(nsecs_t timestamp, const sp<IMemor
         } else {
             ts -= iVideoDurationToPull;
         }
+#else
+    // calculate timestamp as offset from start time
+    uint32 t = (uint32)(timestamp / 1000000L) - iStartTickCount;
+
+    //Adjust the timestamp for the number of frames where the ts is less than
+    //set value
+    if ( iVideoDurationToPull > 0 ) {
+        if ( t < (iVideoDurationToPull + (iVideoFrameSkipCnt * 2)) ) {
+            t = iVideoFrameSkipCnt * 2;
+            iVideoFrameSkipCnt++;
+        } else {
+            t -= iVideoDurationToPull;
+        }
+#endif
     }
 
     // Make sure that no two samples have the same timestamp
