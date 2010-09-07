@@ -135,6 +135,7 @@ enum author_command_type {
     AUTHOR_SET_OUTPUT_FILE,
     AUTHOR_SET_PARAMETERS,
     AUTHOR_SET_CAMERA_PARAMETERS,
+    AUTHOR_AUTOFOCUS_CAMERA,
     AUTHOR_PREPARE,
     AUTHOR_START,
     AUTHOR_STOP,
@@ -254,6 +255,19 @@ private:
     set_camera_parameters_command& operator=(const set_camera_parameters_command&);
 };
 
+struct autofocus_camera_command : author_command
+{
+    autofocus_camera_command()
+        : author_command(AUTHOR_AUTOFOCUS_CAMERA) {
+    }
+
+private:
+
+    // Disallow copying and assignment.
+    autofocus_camera_command(const autofocus_camera_command&);
+    autofocus_camera_command& operator=(const autofocus_camera_command&);
+};
+
 class MediaProfiles;
 
 class AuthorDriver :
@@ -269,7 +283,7 @@ public:
     author_command *dequeueCommand();
     status_t enqueueCommand(author_command *ec, media_completion_f comp, void *cookie);
 
-    // Dequeues a command from MediaRecorder and gives it to PVAuthorEngine.
+    // Dequeues a command fautofocus_camera_command MediaRecorder and gives it to PVAuthorEngine.
     void Run();
 
     // Handlers for the various commands we can accept.
@@ -287,6 +301,7 @@ public:
     void handleSetOutputFile(set_output_file_command *ac);
     void handleSetParameters(set_parameters_command *ac);
     void handleSetCameraParameters(set_camera_parameters_command *ac);
+    void handleAutoFocusCamera(autofocus_camera_command *ac);
     void handlePrepare(author_command *ac);
     void handleStart(author_command *ac);
     void handleStop(author_command *ac);

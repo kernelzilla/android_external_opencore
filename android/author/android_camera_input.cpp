@@ -1182,6 +1182,22 @@ PVMFStatus AndroidCameraInput::SetCameraParameters(const String8& params)
     return PVMFFailure;
 }
 
+PVMFStatus AndroidCameraInput::AutoFocusCamera()
+{
+    LOGV("AutoFocusCamera");
+
+    if (mCamera != NULL) {
+        if (mCamera->autoFocus() != NO_ERROR) {
+            LOGE("Failed to perform camera(%p) autofocus", mCamera.get());
+            return PVMFFailure;
+        }
+        return PVMFSuccess;
+    }
+
+    LOGE("mCamera is NULL");
+    return PVMFFailure;
+}
+
 PVMFStatus AndroidCameraInput::SetCamera(const sp<android::ICamera>& camera)
 {
     LOGV("SetCamera");

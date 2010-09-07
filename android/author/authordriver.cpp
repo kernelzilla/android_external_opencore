@@ -270,6 +270,10 @@ void AuthorDriver::Run()
         handleSetCameraParameters((set_camera_parameters_command *)ac);
         return;
 
+    case AUTHOR_AUTOFOCUS_CAMERA:
+        handleAutoFocusCamera((autofocus_camera_command *)ac);
+        return;
+
     case AUTHOR_REMOVE_VIDEO_SOURCE:
         handleRemoveVideoSource(ac);
         return;
@@ -965,6 +969,23 @@ void AuthorDriver::handleSetCameraParameters(set_camera_parameters_command *ac)
         FinishNonAsyncCommand(ac);
     } else {
         LOGE("Ln %d handleSetCameraParameters error", __LINE__);
+        commandFailed(ac);
+    }
+}
+
+void AuthorDriver::handleAutoFocusCamera(autofocus_camera_command *ac)
+{
+    LOGV("handleAutoFocusCamera");
+    PVMFStatus ret = PVMFSuccess;
+
+    if(mVideoInputMIO){
+        ret = ((AndroidCameraInput *)mVideoInputMIO)->AutoFocusCamera();
+    }
+
+    if(ret == PVMFSuccess) {
+        FinishNonAsyncCommand(ac);
+    } else {
+        LOGE("Ln %d handleAutoFocusCamera error", __LINE__);
         commandFailed(ac);
     }
 }

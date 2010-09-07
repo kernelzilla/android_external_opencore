@@ -161,6 +161,19 @@ status_t PVMediaRecorder::setCameraParameters(const String8& params) {
             command, NULL /* completion_func */, NULL /* completion_cookie */);
 }
 
+status_t PVMediaRecorder::autoFocusCamera() {
+    LOGV("autoFocusCamera()");
+    autofocus_camera_command *command = new autofocus_camera_command();
+    if (command == NULL) {
+        LOGE("failed to construct an author command");
+
+        return NO_MEMORY;
+    }
+
+    return mAuthorDriverWrapper->enqueueCommand(
+            command, NULL /* completion_func */, NULL /* completion_cookie */);
+}
+
 status_t PVMediaRecorder::setAudioEncoder(audio_encoder ae)
 {
     LOGV("setAudioEncoder(%d)", ae);

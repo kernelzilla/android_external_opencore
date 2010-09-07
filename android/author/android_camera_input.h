@@ -416,6 +416,7 @@ public:
     void SetFrameRate(int frames_per_second);
     PVMFStatus SetCamera(const sp<android::ICamera>& camera);
     PVMFStatus SetCameraParameters(const String8& params);
+    PVMFStatus AutoFocusCamera();
 
     // add for Camcorder
     PVMFStatus              postWriteAsync(nsecs_t timestamp, const sp<IMemory>& frame);
