@@ -37,6 +37,8 @@
 #undef LOG_TAG
 #define LOG_TAG "PVOMXVidDecNode"
 
+#define OMX_TI_MAX_RESOLUTION 640
+
 #define CONFIG_SIZE_AND_VERSION(param) \
         param.nSize=sizeof(param); \
         param.nVersion.s.nVersionMajor = SPECVERSIONMAJOR; \
@@ -222,6 +224,18 @@ PVMFStatus PVMFOMXVideoDecNode::HandlePortReEnable()
         // set the new width / height
         iYUVWidth =  iParamPort.format.video.nFrameWidth;
         iYUVHeight = iParamPort.format.video.nFrameHeight;
+
+       //BEGIN Motorola, p40005, 3-08-2010, IKMAP-7192
+        if ( (OMX_TI_MAX_RESOLUTION > 0 ) && // value of zero indicates, do not restrict anything
+             (iYUVWidth * iYUVHeight) > OMX_TI_MAX_RESOLUTION )
+        {
+            PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_STACK_TRACE,
+                            (0, "PVMFOMXVideoDecNode::HandlePortReEnable() resolution too big: max=%d nFrameW(%d) x nFrameH(%d)=%d", OMX_TI_MAX_RESOLUTION, iYUVWidth, iYUVHeight, iYUVWidth * iYUVHeight));
+            SetState(EPVMFNodeError);
+            ReportErrorEvent(PVMFErrNoMemory);
+            return false; // this is going to make everything go out of scope
+        }
+        // END IKMAP-7192
 
         iOMXComponentOutputBufferSize = iParamPort.nBufferSize;
 
@@ -721,6 +735,17 @@ bool PVMFOMXVideoDecNode::NegotiateComponentParameters(OMX_PTR aOutputParameters
         iParamPort.format.video.nFrameHeight = pOutputParameters->height;
         iYUVWidth  = pOutputParameters->width;
         iYUVHeight = pOutputParameters->height;
+
+        //BEGIN Motorola, p40005, 3-08-2010, IKMAP-7192
+        if ( (OMX_TI_MAX_RESOLUTION > 0 ) && // value of zero indicates, do not restrict anything
+             (iYUVWidth * iYUVHeight) > OMX_TI_MAX_RESOLUTION )
+        {
+            PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_STACK_TRACE,
+                            (0, "PVMFOMXVideoDecNode::NegotiateComponentParameters() resolution too big: max=%d nFrameW(%d) x nFrameH(%d)=%d", OMX_TI_MAX_RESOLUTION, iYUVWidth, iYUVHeight, iYUVWidth * iYUVHeight));
+            return false; // this is going to make everything go out of scope
+        }
+        // END IKMAP-7192
+
     }
     else
     {
@@ -1374,7 +1399,7 @@ OMX_ERRORTYPE PVMFOMXVideoDecNode::EventHandlerProcessing(OMX_OUT OMX_HANDLETYPE
         case OMX_EventError:
         {
 
-            LOGE("Ln %d OMX_EventError nData1 %d nData2 %d", __LINE__, aData1, aData2);
+            //LOGE("Ln %d OMX_EventError nData1 %d nData2 %d", __LINE__, aData1, aData2);
             if (aData1 == (OMX_U32) OMX_ErrorStreamCorrupt)
             {
                 PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_ERR,

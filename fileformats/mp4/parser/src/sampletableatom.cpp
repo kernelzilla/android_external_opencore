@@ -1680,6 +1680,7 @@ int32 SampleTableAtom::resetPlayBackbyTime(int32 time, bool oDependsOn)
 
                     // ZERO SYNC SAMPLE ENTRIES - ERROR CONDITION - RESET TO THR BEGINNING OF THE
                     // CLIP
+                    _currChunkOffset = 0;
                     _currentPlaybackSampleNumber = 0;
                     trueTS = _trackStartTSOffset;
                     retValA = _ptimeToSampleAtom->resetStateVariables(_currentPlaybackSampleNumber);
@@ -1718,6 +1719,7 @@ int32 SampleTableAtom::resetPlayBackbyTime(int32 time, bool oDependsOn)
             {
                 // NO SYNC SAMPLE ATOM - ERROR CONDITION - RESET TO THR BEGINNING OF THE
                 // CLIP
+                _currChunkOffset = 0;
                 _currentPlaybackSampleNumber = 0;
                 trueTS = _trackStartTSOffset;
                 _ptimeToSampleAtom->resetStateVariables();

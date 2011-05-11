@@ -22,6 +22,13 @@
 #include "oscl_types.h"
 #include "pvmf_format_type.h"
 
+#define WVGA_MAX_WIDTH 640
+#define WVGA_MAX_HEIGHT 480
+
+#define WMV_MAX_WIDTH 640
+#define WMV_MAX_HEIGHT 480
+
+
 typedef struct
 {
     uint8 *inPtr;

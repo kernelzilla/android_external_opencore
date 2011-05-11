@@ -3575,17 +3575,8 @@ OSCL_EXPORT_REF void PVMFOMXBaseDecNode::HandleComponentStateChange(OMX_U32 deco
 
             PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_ERR,
                             (0, "%s::HandleComponentStateChange: OMX_StateInvalid reached", iName.Str()));
-            if (iOMXDecoder == NULL)
-            {
-                PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_ERR,
-                        (0, "%s::HandleComponentStateChange: cleanup already done. Do nothing", iName.Str()));
-                return;
-            }
-
             //Cleanup encoder
             DeleteOMXBaseDecoder();
-            //Stop using OMX component
-            iProcessingState = EPVMFOMXBaseDecNodeProcessingState_Idle;
 
             if (iCurrentCommand.size() > 0)
             {// CANNOT be CANCEL or CANCEL_ALL. Just to cmd completion for the reset
@@ -3613,6 +3604,7 @@ OSCL_EXPORT_REF void PVMFOMXBaseDecNode::HandleComponentStateChange(OMX_U32 deco
                     iIsEOSSentToComponent = false;
                     iIsEOSReceivedFromComponent = false;
 
+                    iProcessingState = EPVMFOMXBaseDecNodeProcessingState_Idle;
                     //logoff & go back to Created state.
                     SetState(EPVMFNodeIdle);
                     CommandComplete(iCurrentCommand, iCurrentCommand.front(), PVMFSuccess);
@@ -3622,13 +3614,6 @@ OSCL_EXPORT_REF void PVMFOMXBaseDecNode::HandleComponentStateChange(OMX_U32 deco
                     SetState(EPVMFNodeError);
                     CommandComplete(iCurrentCommand, iCurrentCommand.front(), PVMFErrResource);
                 }
-            }
-            else
-            {
-                PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_ERR,
-                        (0, "%s::HandleComponentStateChange: ERROR state transition event while OMX client does NOT have any pending state transition request", iName.Str()));
-                SetState(EPVMFNodeError);
-                ReportErrorEvent(PVMFErrResourceConfiguration);
             }
 
             break;
@@ -3998,6 +3983,11 @@ void PVMFOMXBaseDecNode::DoPrepare(PVMFOMXBaseDecNodeCommand& aCmd)
                 aInputParameters.cComponentRole = (OMX_STRING)"audio_decoder.mp3";
                 aOutputParameters = (AudioOMXConfigParserOutputs *)oscl_malloc(sizeof(AudioOMXConfigParserOutputs));
             }
+            else if (format == PVMF_MIME_EVRC)
+            {
+                aInputParameters.cComponentRole = (OMX_STRING)"audio_decoder.evrc";
+                aOutputParameters = (AudioOMXConfigParserOutputs *)oscl_malloc(sizeof(AudioOMXConfigParserOutputs));
+            }
             else if (format ==  PVMF_MIME_WMA)
             {
                 aInputParameters.cComponentRole = (OMX_STRING)"audio_decoder.wma";
@@ -4098,46 +4088,67 @@ void PVMFOMXBaseDecNode::DoPrepare(PVMFOMXBaseDecNodeCommand& aCmd)
                 // call 2nd time to get the component names
                 OMX_MasterGetComponentsOfRole(aInputParameters.cComponentRole, &num_comps, (OMX_U8 **)CompOfRole);
 
-                for (ii = 0; ii < num_comps; ii++)
+                //BEGIN Motorola, p40005, 2-22-2010, IKMAP-6069, altered following loop
+                OMX_BOOL cont = OMX_TRUE;
+                OMX_BOOL HWAccel = bHWAccelerated;
+
+                while(cont == OMX_TRUE)
                 {
-                    aInputParameters.cComponentName = CompOfRole[ii];
-                    status = OMX_MasterConfigParser(&aInputParameters, aOutputParameters);
-                    if (status == OMX_TRUE)
+                    for (ii = 0; ii < num_comps; ii++)
                     {
-                        // but also needs to valid long enough to use it when getting the number of roles later on
-                        oscl_strncpy((OMX_STRING)CompName, (OMX_STRING) CompOfRole[ii], PV_OMX_MAX_COMPONENT_NAME_LENGTH);
+                        aInputParameters.cComponentName = CompOfRole[ii];
+                        status = OMX_MasterConfigParser(&aInputParameters, aOutputParameters);
+                        if (status == OMX_TRUE)
+                        {
+                            // but also needs to valid long enough to use it when getting the number of roles later on
+                            oscl_strncpy((OMX_STRING)CompName, (OMX_STRING) CompOfRole[ii], PV_OMX_MAX_COMPONENT_NAME_LENGTH);
 //JJDBG
 #if 0
-                        if ((0 == oscl_strncmp(aInputParameters.cComponentName, "OMX.qcom.video.decoder.mpeg4", PV_OMX_MAX_COMPONENT_NAME_LENGTH))
-                                || (0 == oscl_strncmp(aInputParameters.cComponentName, "OMX.qcom.video.decoder.h263", PV_OMX_MAX_COMPONENT_NAME_LENGTH)))
-                        {
-                            LOGE("%s::DoPrepare(): Cannot get component %s handle, try another component if available", iName.Str(), aInputParameters.cComponentName);
-                            continue;
-                            //err = OMX_ErrorUndefined ;
-                        }
-                        else
+                            if ((0 == oscl_strncmp(aInputParameters.cComponentName, "OMX.qcom.video.decoder.mpeg4", PV_OMX_MAX_COMPONENT_NAME_LENGTH))
+                                    || (0 == oscl_strncmp(aInputParameters.cComponentName, "OMX.qcom.video.decoder.h263", PV_OMX_MAX_COMPONENT_NAME_LENGTH)))
+                            {
+                                LOGE("%s::DoPrepare(): Cannot get component %s handle, try another component if available", iName.Str(), aInputParameters.cComponentName);
+                                continue;
+                                //err = OMX_ErrorUndefined ;
+                            }
+                            else
 #endif
-                            // try to create component
-                            err = OMX_MasterGetHandle(&iOMXDecoder, (OMX_STRING) aInputParameters.cComponentName, (OMX_PTR) this, (OMX_CALLBACKTYPE *) & iCallbacks, bHWAccelerated);
-                        // if successful, no need to continue
-                        if ((err == OMX_ErrorNone) && (iOMXDecoder != NULL))
-                        {
-                            PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_DEBUG,
-                                            (0, "%s::DoPrepare(): Got Component %s handle ", iName.Str(), aInputParameters.cComponentName));
-                            break;
+                                // try to create component
+                                err = OMX_MasterGetHandle(&iOMXDecoder, (OMX_STRING) aInputParameters.cComponentName, (OMX_PTR) this, (OMX_CALLBACKTYPE *) & iCallbacks, HWAccel);
+                            // if successful, no need to continue
+                            if ((err == OMX_ErrorNone) && (iOMXDecoder != NULL))
+                            {
+                                PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_DEBUG,
+                                                (0, "%s::DoPrepare(): Got Component %s handle ", iName.Str(), aInputParameters.cComponentName));
+                                break;
+                            }
+                            else
+                            {
+                                PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_DEBUG,
+                                                (0, "%s::DoPrepare(): Cannot get component %s handle, try another component if available", iName.Str(), aInputParameters.cComponentName));
+                            }
                         }
                         else
                         {
+                            status = OMX_FALSE;
                             PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_DEBUG,
-                                            (0, "%s::DoPrepare(): Cannot get component %s handle, try another component if available", iName.Str(), aInputParameters.cComponentName));
+                                            (0, "%s::DoPrepare(): Config Parser Failed For Component %s ", iName.Str(), aInputParameters.cComponentName));
                         }
+                    }
+
+                    if ( ((err == OMX_ErrorNone) && (iOMXDecoder != NULL)) || (HWAccel == OMX_TRUE) )
+                    {
+                        // If a component is found or the search included HW acclerated componentes break out of the loop
+                        cont = OMX_FALSE;
                     }
                     else
                     {
-                        status = OMX_FALSE;
+                        // Search again and include HW Accelerated components
+                        HWAccel = OMX_TRUE;
+                        PVLOGGER_LOGMSG(PVLOGMSG_INST_LLDBG, iLogger, PVLOGMSG_DEBUG,
+                                        (0, "%s::DoPrepare(): Search again with HW Accelerated TRUE", iName.Str()));
                     }
-
-
+                    // END IKMAP-6069
                 }
                 // whether successful or not, need to free CompOfRoles
                 for (ii = 0; ii < num_comps; ii++)

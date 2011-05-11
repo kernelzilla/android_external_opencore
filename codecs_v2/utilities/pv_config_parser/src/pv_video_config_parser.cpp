@@ -88,6 +88,14 @@ OSCL_EXPORT_REF int16 pv_video_config_parser(pvVideoConfigParserInputs *aInputs,
         {
             return retval;
         }
+
+        //BEGIN Motorola, p40005, 2-22-2010, IKMAP-6069
+        if ( (width > WVGA_MAX_WIDTH) || (height > WVGA_MAX_HEIGHT) )
+        {
+            return -1;
+        }
+        // END IKMAP-6069
+
         aOutputs->width  = (uint32)display_width;
         aOutputs->height = (uint32)display_height;
         aOutputs->profile = (uint32)profile_level; // for mp4, profile/level info is packed
@@ -148,6 +156,14 @@ OSCL_EXPORT_REF int16 pv_video_config_parser(pvVideoConfigParserInputs *aInputs,
         {
             return retval;
         }
+
+        //BEGIN Motorola, p40005, 2-22-2010, IKMAP-6069
+        if ( (width > WVGA_MAX_WIDTH) || (height > WVGA_MAX_HEIGHT) )
+        {
+            return -1;
+        }
+        // END IKMAP-6069
+
         aOutputs->width  = (uint32)display_width;
         aOutputs->height = (uint32)display_height;
         aOutputs->profile = (uint32)profile_idc;
@@ -160,8 +176,26 @@ OSCL_EXPORT_REF int16 pv_video_config_parser(pvVideoConfigParserInputs *aInputs,
         uint8 bdat;
         uint8 *pData = aInputs->inPtr;
 
+        //Only 640x480 WMV files will be supported by Morrison. As there is no hardware codec check for morrison (arcsoft code check), we should have a software codec check.
+
         LoadDWORD(dwdat, pData); // Window width
+
+        //BEGIN Motorola, a21190, 07/2010, IKMORRISON-1712 / Media Server crash with a HD WMV file of 1280x720
+        if (dwdat > WMV_MAX_WIDTH)
+        {
+            return -1;
+        }
+        //END IKMORRISON-1712
+
         LoadDWORD(dwdat, pData); // Window height
+
+        //BEGIN Motorola, a21190, 07/2010, IKMORRISON-1712 / Media Server crash with a HD WMV file of 1280x720
+        if (dwdat > WMV_MAX_HEIGHT)
+        {
+            return -1;
+        }
+        //END IKMORRISON-1712  
+
         LoadBYTE(bdat, pData);
         LoadWORD(wdat, pData);  // Size of image info.
 

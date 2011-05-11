@@ -1045,6 +1045,7 @@ OMX_ERRORTYPE OmxComponentFactoryDynamicDestructor(OMX_IN OMX_HANDLETYPE pHandle
     aRefCount--;
     if (0 == aRefCount)
     {
+        lib->Close();
         OSCL_DELETE(lib);
         aOmxLib = NULL;
     }

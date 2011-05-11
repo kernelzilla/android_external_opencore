@@ -827,6 +827,7 @@ class PVMFOMXBaseDecNode
         OSCL_IMPORT_REF OMX_TICKS ConvertTimestampIntoOMXTicks(const MediaClockConverter &src);
         uint32 ConvertOMXTicksIntoTimestamp(const OMX_TICKS &src);
         OMX_BOOL bHWAccelerated;
+        OMX_BOOL first_iframe_received;
 };
 
 
